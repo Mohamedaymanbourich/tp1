@@ -1,0 +1,120 @@
+==========================================
+HPL Benchmark Suite
+==========================================
+Matrix sizes: 1000 5000 10000 20000
+Block sizes: 1 2 4 8 16 32 64 128 256
+Total runs: 36
+==========================================
+
+[1/36] Running HPL: N=1000, NB=1
+  -> Time: 18.38 s, GFLOPS: 3.6347e-02, Status: PASSED
+
+[2/36] Running HPL: N=1000, NB=2
+  -> Time: 9.99 s, GFLOPS: 6.6865e-02, Status: PASSED
+
+[3/36] Running HPL: N=1000, NB=4
+  -> Time: 5.73 s, GFLOPS: 1.1651e-01, Status: PASSED
+
+[4/36] Running HPL: N=1000, NB=8
+  -> Time: 2.96 s, GFLOPS: 2.2536e-01, Status: PASSED
+
+[5/36] Running HPL: N=1000, NB=16
+  -> Time: 1.66 s, GFLOPS: 4.0208e-01, Status: PASSED
+
+[6/36] Running HPL: N=1000, NB=32
+  -> Time: 1.08 s, GFLOPS: 6.1782e-01, Status: PASSED
+
+[7/36] Running HPL: N=1000, NB=64
+  -> Time: 0.76 s, GFLOPS: 8.8427e-01, Status: PASSED
+
+[8/36] Running HPL: N=1000, NB=128
+  -> Time: 0.57 s, GFLOPS: 1.1676e+00, Status: PASSED
+
+[9/36] Running HPL: N=1000, NB=256
+  -> Time: 0.55 s, GFLOPS: 1.2090e+00, Status: PASSED
+
+[10/36] Running HPL: N=5000, NB=1
+  -> Time: 89.56 s, GFLOPS: 9.3086e-01, Status: PASSED
+
+[11/36] Running HPL: N=5000, NB=2
+  -> Time: 17.54 s, GFLOPS: 4.7527e+00, Status: PASSED
+
+[12/36] Running HPL: N=5000, NB=4
+  -> Time: 10.19 s, GFLOPS: 8.1799e+00, Status: PASSED
+
+[13/36] Running HPL: N=5000, NB=8
+  -> Time: 5.26 s, GFLOPS: 1.5837e+01, Status: PASSED
+
+[14/36] Running HPL: N=5000, NB=16
+  -> Time: 3.01 s, GFLOPS: 2.7705e+01, Status: PASSED
+
+[15/36] Running HPL: N=5000, NB=32
+  -> Time: 2.20 s, GFLOPS: 3.7877e+01, Status: PASSED
+
+[16/36] Running HPL: N=5000, NB=64
+  -> Time: 1.89 s, GFLOPS: 4.4163e+01, Status: PASSED
+
+[17/36] Running HPL: N=5000, NB=128
+  -> Time: 1.81 s, GFLOPS: 4.6092e+01, Status: PASSED
+
+[18/36] Running HPL: N=5000, NB=256
+  -> Time: 1.83 s, GFLOPS: 4.5496e+01, Status: PASSED
+
+[19/36] Running HPL: N=10000, NB=1
+  -> Time: 361.68 s, GFLOPS: 1.8437e+00, Status: PASSED
+
+[20/36] Running HPL: N=10000, NB=2
+  -> Time: 148.00 s, GFLOPS: 4.5054e+00, Status: PASSED
+
+[21/36] Running HPL: N=10000, NB=4
+  -> Time: 93.89 s, GFLOPS: 7.1018e+00, Status: PASSED
+
+[22/36] Running HPL: N=10000, NB=8
+  -> Time: 47.24 s, GFLOPS: 1.4115e+01, Status: PASSED
+
+[23/36] Running HPL: N=10000, NB=16
+  -> Time: 26.86 s, GFLOPS: 2.4827e+01, Status: PASSED
+
+[24/36] Running HPL: N=10000, NB=32
+  -> Time: 17.87 s, GFLOPS: 3.7310e+01, Status: PASSED
+
+[25/36] Running HPL: N=10000, NB=64
+  -> Time: 14.64 s, GFLOPS: 4.5541e+01, Status: PASSED
+
+[26/36] Running HPL: N=10000, NB=128
+  -> Time: 13.19 s, GFLOPS: 5.0559e+01, Status: PASSED
+
+[27/36] Running HPL: N=10000, NB=256
+  -> Time: 12.73 s, GFLOPS: 5.2361e+01, Status: PASSED
+
+[28/36] Running HPL: N=20000, NB=1
+  -> Time: 3517.83 s, GFLOPS: 1.5163e+00, Status: PASSED
+
+[29/36] Running HPL: N=20000, NB=2
+  -> Time: 2710.85 s, GFLOPS: 1.9676e+00, Status: PASSED
+
+[30/36] Running HPL: N=20000, NB=4
+  -> Time: 750.42 s, GFLOPS: 7.1079e+00, Status: PASSED
+
+[31/36] Running HPL: N=20000, NB=8
+  -> Time: 1264.89 s, GFLOPS: 4.2169e+00, Status: PASSED
+
+[32/36] Running HPL: N=20000, NB=16
+  -> Time: 194.81 s, GFLOPS: 2.7381e+01, Status: PASSED
+
+[33/36] Running HPL: N=20000, NB=32
+  -> Time: 135.00 s, GFLOPS: 3.9510e+01, Status: PASSED
+
+[34/36] Running HPL: N=20000, NB=64
+  -> Time: 107.54 s, GFLOPS: 4.9599e+01, Status: PASSED
+
+[35/36] Running HPL: N=20000, NB=128
+  -> Time: 96.83 s, GFLOPS: 5.5087e+01, Status: PASSED
+
+[36/36] Running HPL: N=20000, NB=256
+  -> Time: 271.73 s, GFLOPS: 1.9629e+01, Status: PASSED
+
+==========================================
+Benchmarks completed!
+Results saved to: /home/mohamed.bourich/hpl-2.3/results/hpl_results.csv
+==========================================
