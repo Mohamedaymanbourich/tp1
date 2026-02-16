@@ -1,0 +1,439 @@
+\documentclass[11pt,a4paper]{report}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{fancyhdr}
+
+\geometry{margin=1in}
+
+\lstdefinestyle{cstyle}{
+    language=C,
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{red},
+    breaklines=true,
+    tabsize=4,
+    numbers=left,
+    numberstyle=\tiny,
+    frame=single,
+}
+\lstset{style=cstyle}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{TP3 - OpenMP}
+\lhead{Imad Kissami}
+\cfoot{\thepage}
+
+\title{\textbf{TP3 - OpenMP (Introduction)}\\ \large Parallel Programming Report}
+\author{Mohamed Ayman Bourich}
+\date{February 2026}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\chapter{Exercise 1: Thread Identification}
+
+\section{Question}
+Display the number of threads and the rank of each thread.
+
+\section{Solution}
+
+\begin{lstlisting}
+#include <omp.h>
+#include <stdio.h>
+
+int main() {
+#pragma omp parallel
+  {
+    int thread_id = omp_get_thread_num();
+    int num_threads = omp_get_num_threads();
+    printf("Hello from thread %d of %d\n", thread_id, num_threads);
+  }
+  return 0;
+}
+\end{lstlisting}
+
+\section{Answer}
+
+The program uses \texttt{\#pragma omp parallel} to create a thread team. Each thread calls:
+\begin{itemize}
+    \item \texttt{omp\_get\_thread\_num()}: Returns thread ID (0 to n-1)
+    \item \texttt{omp\_get\_num\_threads()}: Returns total threads in team
+\end{itemize}
+
+\textbf{Execution with 4 threads:}
+\begin{verbatim}
+Hello from thread 0 of 4
+Hello from thread 1 of 4
+Hello from thread 2 of 4
+Hello from thread 3 of 4
+\end{verbatim}
+
+Note: Output order varies due to OS scheduling.
+
+\newpage
+
+\chapter{Exercise 2: PI Calculation (Manual Work Distribution)}
+
+\section{Question}
+Parallelize PI calculation using manual thread work distribution (no \texttt{parallel for}), with attention to shared vs. private variables.
+
+\section{Solution}
+
+\begin{lstlisting}
+#include <omp.h>
+#include <stdio.h>
+
+static long num_steps = 100000;
+double step;
+
+int main() {
+    double pi, sum = 0.0;
+    double start_time = omp_get_wtime();
+    
+    #pragma omp parallel num_threads(4) reduction(+:sum)
+    {
+        int thread_id = omp_get_thread_num();
+        int num_threads = omp_get_num_threads();
+        int i;
+        double x;
+        
+        for (i = thread_id*num_steps/num_threads; 
+             i < (thread_id+1)*num_steps/num_threads; i++) {
+            step = 1.0 / (double)num_steps;
+            x = (i + 0.5) * step;
+            sum = sum + 4.0 / (1.0 + x * x);
+        }
+    }
+    
+    pi = step * sum;
+    printf("Pi is approximately: %.10f\n", pi);
+    printf("Time: %.6f seconds\n", omp_get_wtime() - start_time);
+    return 0;
+}
+\end{lstlisting}
+
+\section{Answer}
+
+\subsection{Work Distribution}
+Each thread computes iterations from \texttt{thread\_id * (num\_steps/num\_threads)} to \texttt{(thread\_id+1) * (num\_steps/num\_threads)}.
+
+\subsection{Variable Classification}
+\begin{itemize}
+    \item \textbf{Shared}: \texttt{sum} (with \texttt{reduction(+:sum)})
+    \item \textbf{Private}: \texttt{x}, \texttt{i}, \texttt{step}
+\end{itemize}
+
+The \texttt{reduction(+:sum)} clause safely combines partial sums from all threads.
+
+\textbf{Result:} PI approximation: $\approx 3.1416$
+
+\newpage
+
+\chapter{Exercise 3: PI with Loop Construct}
+
+\section{Question}
+Parallelize PI calculation with minimal code changes (add only 1 line).
+
+\section{Solution}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <omp.h>
+
+static long num_steps = 100000;
+double step;
+
+int main() {
+    int i;
+    double x, pi, sum = 0.0;
+    step = 1.0 / (double)num_steps;
+    
+    #pragma omp parallel for reduction(+:sum)
+    for (i = 0; i < num_steps; i++) {
+        x = (i + 0.5) * step;
+        sum = sum + 4.0 / (1.0 + x * x);
+    }
+    
+    pi = step * sum;
+    printf("Pi is approximately: %.10f\n", pi);
+    return 0;
+}
+\end{lstlisting}
+
+\section{Answer}
+
+Only \textbf{one line added}: \texttt{\#pragma omp parallel for reduction(+:sum)}
+
+The compiler automatically:
+\begin{itemize}
+    \item Distributes loop iterations among threads
+    \item Makes \texttt{i} private to each thread
+    \item Creates partial sums for each thread
+    \item Combines results using reduction
+    \item Synchronizes at end of region
+\end{itemize}
+
+\textbf{Advantage}: Most concise parallelization, minimal code modification.
+
+\newpage
+
+\chapter{Exercise 4: Matrix Multiplication with Scheduling}
+
+\section{Question}
+Parallelize matrix multiplication. Test scheduling modes (STATIC, DYNAMIC, GUIDED) and chunk sizes. Run with 1, 2, 4, 8, 16 threads. Plot speedup and efficiency.
+
+\section{Core Implementation}
+
+\begin{lstlisting}
+// Matrix multiplication with collapse(2)
+#pragma omp parallel for collapse(2) schedule(static, chunk_size)
+for (int i = 0; i < m; i++) {
+    for (int j = 0; j < m; j++) {
+        for (int k = 0; k < n; k++) {
+            c[i * m + j] += a[i * n + k] * b[k * m + j];
+        }
+    }
+}
+\end{lstlisting}
+
+\subsection{Scheduling Strategies}
+
+\begin{table}[H]
+\centering
+\caption{Scheduling Mode Comparison (800×800 matrices, 5 runs average)}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Mode} & \textbf{Chunk} & \textbf{8 Threads (sec)} & \textbf{Overhead} \\
+\midrule
+STATIC & 100 & 0.3012 & Low \\
+DYNAMIC & 10 & 0.3245 & High \\
+GUIDED & 50 & 0.3098 & Medium \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Answers}
+
+\subsection{Q1: Which scheduling is best?}
+\textbf{STATIC} with chunk size 50-100 shows best performance for this uniform-cost workload (0.3012 seconds at 8 threads).
+
+\subsection{Q2: Speedup Results}
+
+\begin{table}[H]
+\centering
+\caption{Matrix Multiplication Speedup (base: 0.8008 sec)}
+\begin{tabular}{ccc}
+\toprule
+\textbf{Threads} & \textbf{Time (sec)} & \textbf{Speedup} \\
+\midrule
+1 & 0.8008 & 1.00x \\
+2 & 0.5124 & 1.56x \\
+4 & 0.3142 & 2.55x \\
+8 & 0.2987 & 2.68x \\
+16 & 0.3456 & 2.32x \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Key Finding}: Best speedup at 8 threads (2.68x). Performance decreases with 16 threads due to memory bandwidth saturation.
+
+\subsection{Q3: Optimal Chunk Size}
+
+For STATIC scheduling with 4 threads:
+\begin{itemize}
+    \item Chunk=1: 0.3567 sec (high overhead)
+    \item Chunk=50-100: 0.3142 sec (optimal)
+    \item Chunk=500: 0.3189 sec (slightly worse)
+\end{itemize}
+
+\textbf{Conclusion}: Chunk sizes 50-100 provide optimal balance.
+
+\subsection{Plots and Results:}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{performance_analysis.png}
+\caption{Performance of the algorithm (speedup, efficiency) with regards to different numbers of threads, chunk sizes and scheduling methods}
+\end{figure}
+
+\newpage
+
+\chapter{Exercise 5: Jacobi Method Parallelization}
+
+\section{Question}
+Parallelize the Jacobi iterative method. Run with 1, 2, 4, 8, 16 threads. Plot speedup and efficiency.
+
+\section{Implementation}
+
+\begin{lstlisting}
+// Loop 1: Compute new approximation
+#pragma omp parallel for private(i, j)
+for (i = 0; i < n; i++) {
+    x_courant[i] = 0;
+    for (j = 0; j < i; j++) {
+        x_courant[i] += a[j * n + i] * x[j];
+    }
+    for (j = i + 1; j < n; j++) {
+        x_courant[i] += a[j * n + i] * x[j];
+    }
+    x_courant[i] = (b[i] - x_courant[i]) / a[i * n + i];
+}
+
+// Loop 2: Find maximum difference (convergence check)
+double absmax = 0;
+#pragma omp parallel for reduction(max:absmax) private(i)
+for (i = 0; i < n; i++) {
+    double curr = fabs(x[i] - x_courant[i]);
+    if (curr > absmax)
+        absmax = curr;
+}
+norme = absmax / n;
+\end{lstlisting}
+
+\subsection{Parallelization Strategy}
+\begin{itemize}
+    \item Each row computation is \textbf{independent} $\rightarrow$ parallelize outer loop
+    \item Maximum difference reduction requires \texttt{reduction(max:absmax)}
+    \item Variables \texttt{i, j} are private to each thread
+\end{itemize}
+
+\section{Results: 800×800 Matrix}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ccccc}
+\toprule
+\textbf{Threads} & \textbf{Time (ms)} & \textbf{Speedup} & \textbf{Efficiency} & \textbf{Status} \\
+\midrule
+Sequential & 97.47 & 1.000x & - & Baseline \\
+1 & 85.63 & 1.138x & 1.138 & Overhead \\
+2 & 54.37 & 1.793x & 0.896 & Excellent \\
+4 & 30.40 & 3.206x & 0.802 & \textbf{Optimal} \\
+8 & 49.07 & 1.986x & 0.248 & Overhead \\
+16 & 53.41 & 1.825x & 0.114 & Saturation \\
+\bottomrule
+\end{tabular}
+\caption{Jacobi Method Performance}
+
+\end{table}
+
+\subsection{Performance Visualization}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{jacobi_comprehensive_analysis.png}
+\caption{Comprehensive Jacobi Method Performance Analysis: (Top-Left) Execution time vs threads across different matrix sizes; (Top-Right) Speedup comparison with ideal linear scaling; (Bottom-Left) Efficiency degradation with increasing threads; (Bottom-Right) Summary table of performance metrics.}
+\label{fig:jacobi_perf}
+\end{figure}
+
+\section{Answers}
+
+\subsection{Q1: Speedup and Efficiency}
+
+\textbf{Peak Speedup}: 3.206x with 4 threads
+
+\textbf{Peak Efficiency}: 80.2\% (4 threads)
+
+\textbf{Best 2-Thread Efficiency}: 89.6\%
+
+\subsection{Q2: Performance Scaling}
+
+\begin{itemize}
+    \item 2 threads: 1.793x speedup (good scaling)
+    \item 4 threads: 3.206x speedup (excellent scaling)
+    \item 8 threads: 1.986x speedup (diminishing returns)
+    \item 16 threads: 1.825x speedup (overhead exceeds benefit)
+\end{itemize}
+
+\textbf{Why performance decreases?}
+\begin{enumerate}
+    \item Memory bandwidth saturation (all threads access same matrices)
+    \item Synchronization overhead increases with thread count
+    \item Thread creation/scheduling costs
+\end{enumerate}
+
+\subsection{Q3: Improvement vs Sequential}
+
+\textbf{Best Case (4 threads)}: 30.40 ms vs 97.47 ms sequential
+
+\textbf{Improvement}: 69.8\% reduction in execution time
+
+\section{Performance Across Problem Sizes}
+
+\begin{table}[H]
+\centering
+\caption{Speedup for Different Matrix Sizes (4 threads)}
+\begin{tabular}{ccc}
+\toprule
+\textbf{Matrix Size} & \textbf{Sequential (ms)} & \textbf{Speedup} \\
+\midrule
+120×120 & 1.29 & 1.36x \\
+300×300 & 8.89 & 1.68x \\
+500×500 & 25.28 & 2.14x \\
+800×800 & 97.47 & 3.206x \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Key Observation}: Larger problems show better parallelization benefits.
+
+\newpage
+
+\chapter{Summary and Key Findings}
+
+\section{Exercise Comparison}
+
+\begin{table}[H]
+\centering
+\caption{Performance Metrics Summary}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Exercise} & \textbf{Best Speedup} & \textbf{Optimal Threads} \\
+\midrule
+Exercise 4 (Matrix Mult.) & 2.68x & 8 \\
+Exercise 5 (Jacobi) & 3.206x & 4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Why Jacobi Parallelize Well}
+
+\begin{enumerate}
+    \item Independence: Each row computation is completely independent
+    \item Computational Work: High computation-to-communication ratio
+    \item Load Balance: Equal work distribution (all rows equivalent)
+    \item Synchronization: Minimal overhead (one barrier per iteration)
+\end{enumerate}
+
+\section{Hardware Limitations}
+
+Speedup plateaus due to:
+\begin{itemize}
+    \item Memory Bandwidth: ~100 GB/s shared among all threads
+    \item L3 Cache Contention: Shared cache reduces per-thread bandwidth
+    \item Synchronization: Implicit barriers in parallel loops
+    \item System Overhead: Thread scheduling and context switching
+\end{itemize}
+
+\section{OpenMP Best Practices}
+
+\begin{enumerate}
+    \item \textbf{Optimal Threads $\neq$ Maximum Threads}: More threads increase overhead
+    \item \textbf{Problem Scaling Matters}: Larger problems parallelize better
+    \item \textbf{Choose Right Construct}: Use \texttt{parallel for} when appropriate
+    \item \textbf{Reduction Operations}: Essential for combining thread results
+    \item \textbf{Scheduling Strategies}: STATIC best for uniform workload
+    \item \textbf{Variable Classification}: Critical to designate shared vs. private
+\end{enumerate}
+
+
+
+\end{document}
